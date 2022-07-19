@@ -179,7 +179,7 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 		std::stringstream message;
 		message << character->GetName() << " changed their PVP flag to " << std::to_string(character->GetPvpEnabled()) << "!";
 
-		ChatPackets::SendSystemMessage(UNASSIGNED_SYSTEM_ADDRESS, GeneralUtils::ASCIIToUTF16(message.str()), true);
+		ChatPackets::SendSystemMessage(UNASSIGNED_SYSTEM_ADDRESS, GeneralUtils::UTF8ToUTF16(message.str()), true);
 
 		return;
 	}
@@ -197,7 +197,7 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 
 			ChatPackets::SendSystemMessage(
 				sysAddr,
-				GeneralUtils::ASCIIToUTF16(player == entity ? name + " (you)" : name)
+				GeneralUtils::UTF8ToUTF16(player == entity ? name + " (you)" : name)
 			);
 		}
 	}
@@ -727,6 +727,7 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 			return;
 		}
 
+		// FIXME: use fallible ASCIIToUTF16 conversion, because non-ascii isn't valid anyway
 		GameMessages::SendPlayFXEffect(entity->GetObjectID(), effectID, GeneralUtils::ASCIIToUTF16(args[1]), args[2]);
 	}
 
@@ -886,7 +887,7 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 			name += arg + " ";
 		}
 
-		GameMessages::SendSetName(entity->GetObjectID(), GeneralUtils::ASCIIToUTF16(name), UNASSIGNED_SYSTEM_ADDRESS);
+		GameMessages::SendSetName(entity->GetObjectID(), GeneralUtils::UTF8ToUTF16(name), UNASSIGNED_SYSTEM_ADDRESS);
 	}
 
 	if (chatCommand == "title" && entity->GetGMLevel() >= GAME_MASTER_LEVEL_DEVELOPER)
@@ -898,7 +899,7 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 			name += arg + " ";
 		}
 
-		GameMessages::SendSetName(entity->GetObjectID(), GeneralUtils::ASCIIToUTF16(name), UNASSIGNED_SYSTEM_ADDRESS);
+		GameMessages::SendSetName(entity->GetObjectID(), GeneralUtils::UTF8ToUTF16(name), UNASSIGNED_SYSTEM_ADDRESS);
 	}
 
 	if ((chatCommand == "teleport" || chatCommand == "tele") && entity->GetGMLevel() >= GAME_MASTER_LEVEL_JUNIOR_MODERATOR) {
@@ -1044,7 +1045,7 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 
 				if (accountId == 0)
 				{
-					ChatPackets::SendSystemMessage(sysAddr, u"Count not find player of name: " + GeneralUtils::ASCIIToUTF16(args[0]));
+					ChatPackets::SendSystemMessage(sysAddr, u"Count not find player of name: " + GeneralUtils::UTF8ToUTF16(args[0]));
 
 					return;
 				}
@@ -1103,7 +1104,7 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 
 			const auto timeStr = GeneralUtils::ASCIIToUTF16(std::string(buffer));
 
-			ChatPackets::SendSystemMessage(sysAddr, u"Muted: " + GeneralUtils::ASCIIToUTF16(args[0]) + u" until " + timeStr);
+			ChatPackets::SendSystemMessage(sysAddr, u"Muted: " + GeneralUtils::UTF8ToUTF16(args[0]) + u" until " + timeStr);
 
 			//Notify chat about it
 			CBITSTREAM;
@@ -1123,16 +1124,17 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 		if (args.size() == 1) {
 			auto* player = Player::GetPlayer(args[0]);
 
+			std::u16string username = GeneralUtils::UTF8ToUTF16(args[0]);
 			if (player == nullptr)
 			{
-				ChatPackets::SendSystemMessage(sysAddr, u"Count not find player of name: " + GeneralUtils::ASCIIToUTF16(args[0]));
+				ChatPackets::SendSystemMessage(sysAddr, u"Count not find player of name: " + username);
 
 				return;
 			}
 
 			Game::server->Disconnect(player->GetSystemAddress(), SERVER_DISCON_KICK);
 
-			ChatPackets::SendSystemMessage(sysAddr, u"Kicked: " + GeneralUtils::ASCIIToUTF16(args[0]));
+			ChatPackets::SendSystemMessage(sysAddr, u"Kicked: " + username);
 		}
 		else {
 			ChatPackets::SendSystemMessage(sysAddr, u"Correct usage: /kick <username>");
@@ -1163,7 +1165,7 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 
 				if (accountId == 0)
 				{
-					ChatPackets::SendSystemMessage(sysAddr, u"Count not find player of name: " + GeneralUtils::ASCIIToUTF16(args[0]));
+					ChatPackets::SendSystemMessage(sysAddr, u"Count not find player of name: " + GeneralUtils::UTF8ToUTF16(args[0]));
 
 					return;
 				}
@@ -1256,7 +1258,7 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 
         while (!tables.eof()) {
             std::string message = std::to_string(tables.getIntField(0)) + " - " + tables.getStringField(1);
-            ChatPackets::SendSystemMessage(sysAddr, GeneralUtils::ASCIIToUTF16(message, message.size()));
+            ChatPackets::SendSystemMessage(sysAddr, GeneralUtils::UTF8ToUTF16(message, message.size()));
             tables.nextRow();
         }
     }
@@ -1316,12 +1318,12 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 			auto requestedPlayer = Player::GetPlayer(requestedPlayerToSetLevelOf);
 
 			if (!requestedPlayer) {
-				ChatPackets::SendSystemMessage(sysAddr, u"No player found with username: (" + GeneralUtils::ASCIIToUTF16(requestedPlayerToSetLevelOf) + u").");
+				ChatPackets::SendSystemMessage(sysAddr, u"No player found with username: (" + GeneralUtils::UTF8ToUTF16(requestedPlayerToSetLevelOf) + u").");
 				return;
 			}
 
 			if (!requestedPlayer->GetOwner()) {
-				ChatPackets::SendSystemMessage(sysAddr, u"No entity found with username: (" + GeneralUtils::ASCIIToUTF16(requestedPlayerToSetLevelOf) + u").");
+				ChatPackets::SendSystemMessage(sysAddr, u"No entity found with username: (" + GeneralUtils::UTF8ToUTF16(requestedPlayerToSetLevelOf) + u").");
 				return;
 			}
 
@@ -1362,7 +1364,7 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 
 		if (requestedPlayerToSetLevelOf != "") {
 		ChatPackets::SendSystemMessage(
-			sysAddr, u"Set " + GeneralUtils::ASCIIToUTF16(requestedPlayerToSetLevelOf) + u"'s level to " + GeneralUtils::to_u16string(requestedLevel) +
+			sysAddr, u"Set " + GeneralUtils::UTF8ToUTF16(requestedPlayerToSetLevelOf) + u"'s level to " + GeneralUtils::to_u16string(requestedLevel) +
 			u" and UScore to " + GeneralUtils::to_u16string(characterComponent->GetUScore()) +
 			u". Relog to see changes.");
 		} else {
@@ -1544,8 +1546,8 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 			});
 		} else {
 			std::string msg = "ZoneID not found or allowed: ";
-			msg.append(args[0]);
-			ChatPackets::SendSystemMessage(sysAddr, GeneralUtils::ASCIIToUTF16(msg, msg.size()));
+			msg.append(args[0]); // FIXME: unnecessary utf16 re-encoding just for error
+			ChatPackets::SendSystemMessage(sysAddr, GeneralUtils::UTF8ToUTF16(msg, msg.size()));
 		}
 	}
 
@@ -1696,7 +1698,7 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 		GameConfig::SetValue(args[0], args[1]);
 
 		ChatPackets::SendSystemMessage(
-			sysAddr, u"Set config value: " + GeneralUtils::ASCIIToUTF16(args[0]) + u" to " + GeneralUtils::ASCIIToUTF16(args[1])
+			sysAddr, u"Set config value: " + GeneralUtils::UTF8ToUTF16(args[0]) + u" to " + GeneralUtils::UTF8ToUTF16(args[1])
 		);
 	}
 
@@ -1706,11 +1708,11 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 
 		if (value.empty())
 		{
-			ChatPackets::SendSystemMessage(sysAddr, u"No value found for " + GeneralUtils::ASCIIToUTF16(args[0]));
+			ChatPackets::SendSystemMessage(sysAddr, u"No value found for " + GeneralUtils::UTF8ToUTF16(args[0]));
 		}
 		else
 		{
-			ChatPackets::SendSystemMessage(sysAddr, u"Value for " + GeneralUtils::ASCIIToUTF16(args[0]) + u": " + GeneralUtils::ASCIIToUTF16(value));
+			ChatPackets::SendSystemMessage(sysAddr, u"Value for " + GeneralUtils::UTF8ToUTF16(args[0]) + u": " + GeneralUtils::UTF8ToUTF16(value));
 		}
 	}
 
@@ -1805,7 +1807,7 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 		{
 			component = -1;
 
-			ldf = GeneralUtils::ASCIIToUTF16(args[0]);
+			ldf = GeneralUtils::UTF8ToUTF16(args[0]);
 
 			isLDF = true;
 		}
@@ -1903,13 +1905,13 @@ void SlashCommandHandler::HandleChatCommand(const std::u16string& command, Entit
 			}
 			else if (args[1] == "-a" && args.size() >= 3)
 			{
-				GameMessages::SendPlayAnimation(closest, GeneralUtils::ASCIIToUTF16(args[2]));
+				GameMessages::SendPlayAnimation(closest, GeneralUtils::UTF8ToUTF16(args[2]));
 			}
 			else if (args[1] == "-s")
 			{
 				for (auto* entry : closest->GetSettings())
 				{
-					ChatPackets::SendSystemMessage(sysAddr, GeneralUtils::ASCIIToUTF16(entry->GetString()));
+					ChatPackets::SendSystemMessage(sysAddr, GeneralUtils::UTF8ToUTF16(entry->GetString()));
 				}
 
 				ChatPackets::SendSystemMessage(sysAddr, u"------");

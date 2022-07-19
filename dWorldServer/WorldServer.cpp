@@ -987,7 +987,7 @@ void HandlePacket(Packet* packet) {
             if (user) {
                 Character* c = user->GetLastUsedChar();
                 if (c != nullptr) {
-                    std::u16string username = GeneralUtils::ASCIIToUTF16(c->GetName());
+                    std::u16string username = GeneralUtils::UTF8ToUTF16(c->GetName());
 					Game::server->GetReplicaManager()->AddParticipant(packet->systemAddress);
 
                     EntityInfo info {};
@@ -1128,7 +1128,7 @@ void HandlePacket(Packet* packet) {
 					noBBB:
 
 					// Tell the client it's done loading:
-					GameMessages::SendInvalidZoneTransferList(player, packet->systemAddress, GeneralUtils::ASCIIToUTF16(Game::config->GetValue("source")), u"", false, false);
+					GameMessages::SendInvalidZoneTransferList(player, packet->systemAddress, GeneralUtils::UTF8ToUTF16(Game::config->GetValue("source")), u"", false, false);
 					GameMessages::SendServerDoneLoadingAllObjects(player, packet->systemAddress);
 
 					//Send the player it's mail count:

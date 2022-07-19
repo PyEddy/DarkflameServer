@@ -617,7 +617,7 @@ void ChatPacketHandler::HandleTeamKick(Packet* packet)
 	}
 	else
 	{
-		kickedId = playerContainer.GetId(GeneralUtils::ASCIIToUTF16(kickedPlayer));
+		kickedId = playerContainer.GetId(GeneralUtils::UTF8ToUTF16(kickedPlayer));
 	}
 
 	if (kickedId == LWOOBJID_EMPTY) return;
@@ -720,7 +720,7 @@ void ChatPacketHandler::HandleTeamStatusRequest(Packet* packet)
 
 		playerContainer.TeamStatusUpdate(team);
 
-		const auto leaderName = GeneralUtils::ASCIIToUTF16(std::string(data->playerName.c_str()));
+		const auto leaderName = GeneralUtils::UTF8ToUTF16(data->playerName);
 
 		for (const auto memberId : team->memberIDs)
 		{
