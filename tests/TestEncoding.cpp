@@ -20,7 +20,7 @@ int TestEncoding(int argc, char* *const argv) {
     v = x;
     GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, U'F');
     GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, U'r');
-    GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, U'ü');
+    GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, 0xFC);
     GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, U'h');
     GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, U'l');
     GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, U'i');
@@ -30,9 +30,9 @@ int TestEncoding(int argc, char* *const argv) {
 
     x = "中文字";
     v = x;
-    GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, U'中');
-    GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, U'文');
-    GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, U'字');
+    GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, 0x4e2d);
+    GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, 0x6587);
+    GeneralUtils::_NextUTF8Char(v, out); ASSERT_EQ(out, 0x5b57);
     ASSERT_EQ(GeneralUtils::_NextUTF8Char(v, out), false);
 
     x = "👨‍⚖️";
